@@ -1,69 +1,148 @@
-SHELL = bash
-APP := $(shell basename $(PWD) | tr '[:upper:]' '[:lower:]')
-DATE := $(shell date -u +%Y-%m-%d%Z%H:%M:%S)
-CI_BUILD_NUMBER ?= dev
-BUILD_NUMBER ?= $(CI_BUILD_NUMBER)
-BUILD_VERSION = $(VERSION)-$(BUILD_NUMBER)
-CI_COMMIT ?= $(shell git rev-parse HEAD)
-DOCKER_REPO ?= gomicro
-DOCKER_IMAGE_NAME ?= duty
-DOCKER_IMAGE_LABEL ?= latest
-GIT_COMMIT_HASH ?= $(CI_COMMIT)
-NO_COLOR := \033[0m
-INFO_COLOR := \033[0;36m
-VERSION = 0.0.1
-GOCMD = go
-GOBUILD = $(GOCMD) build
-GOCLEAN = $(GOCMD) clean
-GOTEST = $(GOCMD) test -v $(shell $(GOCMD) list ./... | grep -v /vendor/)
-GOFMT = go fmt
-CGO_ENABLED ?= 0
-GOOS ?= $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ifeq ($(V),1)
+  Q =
+else
+  Q = @
+endif
 
+# The binary to build (just the basename).
+BIN ?= duty
+
+# This repo's root import path (under GOPATH).
+PKG := github.com/danifv27/duty
+
+# Where to push the docker image.
+DOCKER_REGISTRY ?= registry.hub.docker.com
+
+
+# Which architecture to build - see $(ALL_ARCH) for options.
+# if the 'local' rule is being run, detect the ARCH from 'go env'
+# if it wasn't specified by the caller.
+local : ARCH ?= $(shell go env GOOS)-$(shell go env GOARCH)
+ARCH ?= linux-amd64
+
+REVISION:= $(shell echo $$(git rev-parse HEAD) ||echo "Unknown Revision")
+
+BUILDINFO_TAG ?= $(shell echo $$(git describe --long --all | tr '/' '-')$$(git diff-index --quiet HEAD -- || echo '-dirty-'$$(git diff-index -u HEAD | openssl sha1 | cut -c 10-17)))
+VCS_TAG := $(shell git describe --tags)
+ifeq ($(VCS_TAG),)
+VCS_TAG := $(BUILDINFO_TAG)
+endif
+
+ifeq ($(VERSION),)
+VERSION := $(VCS_TAG)
+endif
+
+TAG_LATEST ?= false
+
+platform_temp = $(subst -, ,$(ARCH))
+GOOS = $(word 1, $(platform_temp))
+GOARCH = $(word 2, $(platform_temp))
+
+BASE64_PASSWORD_DANIFV27 = ZHVtbXlWYWx1ZQ==
+# timestamp value that is formatted according to the RFC3339 standard
+BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+
+# Set default base image dynamically for each arch
+ifeq ($(GOARCH),amd64)
+	DOCKERFILE ?= Dockerfile.$(BIN)
+endif
+
+GIT_COMMIT=$(shell git rev-parse HEAD)
+GIT_SHORT_COMMIT=$(shell git rev-parse --short HEAD)
+IMAGE_NAME = $(DOCKER_REGISTRY)/library/$(BIN)
+IMAGE_NAME_LC = $(shell echo $(IMAGE_NAME) | tr A-Z a-z)
+
+VCS_USER ?= danifv27
+VCS_PASSWORD = $(shell echo $(BASE64_PASSWORD_DANIFV27) | base64 --decode)
+VCS_PROTOCOL ?= https
+VCS_URL ?= github.com/danifv27/duty.git
+VCS_REF:= $(shell git rev-parse HEAD)
+
+PHONY: init 
+init: ./go.mod ## Initialize the module
+
+./go.mod:
+	$(Q)go mod init $(PKG) && go mod tidy
 
 .PHONY: all
 all: test build
 
-.PHONY: build
-build: ## Run the go build command
-	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) $(GOBUILD) -o $(APP)
+# GNU make required targets declared as .PHONY to be explicit
+BUILD_PHONY_TARGETS = build-linux-amd64 build-darwin-amd64 build-windows-amd64
+.PHONY: $(BUILD_PHONY_TARGETS)
+$(BUILD_PHONY_TARGETS): build-%:
+	$(Q)$(MAKE) --no-print-directory ARCH=$* build
+
+PHONY: build
+build: output/$(GOOS)/$(GOARCH)/bin/$(BIN)
+
+output/$(GOOS)/$(GOARCH)/bin/$(BIN): build-dirs
+	@echo "Building binary: $@ $(VERSION)"
+	GOOS=$(GOOS) \
+	GOARCH=$(GOARCH) \
+	VERSION=$(VERSION) \
+	PKG=$(PKG) \
+	BIN=$(BIN) \
+	OUTPUT_DIR=./output/$(GOOS)/$(GOARCH)/bin \
+	./scripts/build.sh
+
+PHONY: local
+local: build-dirs ## Build application for the local arch
+	GOOS=$(GOOS) \
+	GOARCH=$(GOARCH) \
+	VERSION=$(VERSION) \
+	PKG=$(PKG) \
+	BIN=$(BIN) \
+	OUTPUT_DIR=$$(pwd)/output/$(GOOS)/$(GOARCH)/bin \
+	scripts/build.sh
+
+PHONY: build-dirs
+build-dirs:
+	@mkdir -p output/$(GOOS)/$(GOARCH)/bin
+	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(GOOS)/$(GOARCH) .go/go-build
+
+CLEAN_PHONY_TARGETS = clean-linux-amd64 clean-darwin-amd64 clean-windows-amd64
+.PHONY: $(CLEAN_PHONY_TARGETS)
+$(CLEAN_PHONY_TARGETS): clean-%:
+	$(Q)$(MAKE) --no-print-directory ARCH=$* clean
 
 .PHONY: clean
+clean-%:
+	$(Q)$(MAKE) --no-print-directory ARCH=$* clean
+
 clean: ## Clean out all generated items
-	-@$(GOCLEAN)
+	$(Q)echo "Cleaning binary: $(pwd)/output/$(GOOS)/$(GOARCH)/bin/${BIN}"
+	$(Q)test -e $$(pwd)/output/$(GOOS)/$(GOARCH)/bin/${BIN} || rm $$(pwd)/output/$(GOOS)/$(GOARCH)/bin/${BIN}
 
 .PHONY: coverage
 coverage: ## Generates the total code coverage of the project
-	@$(eval COVERAGE_DIR=$(shell mktemp -d))
-	@mkdir -p $(COVERAGE_DIR)/tmp
-	@for j in $$(go list ./... | grep -v '/vendor/' | grep -v '/ext/'); do go test -covermode=count -coverprofile=$(COVERAGE_DIR)/$$(basename $$j).out $$j > /dev/null 2>&1; done
-	@echo 'mode: count' > $(COVERAGE_DIR)/tmp/full.out
-	@tail -q -n +2 $(COVERAGE_DIR)/*.out >> $(COVERAGE_DIR)/tmp/full.out
-	@$(GOCMD) tool cover -func=$(COVERAGE_DIR)/tmp/full.out | tail -n 1 | sed -e 's/^.*statements)[[:space:]]*//' -e 's/%//'
+	$(Q)$(eval COVERAGE_DIR=$(shell mktemp -d))
+	$(Q)mkdir -p $(COVERAGE_DIR)/tmp
+	$(Q)for j in $$(go list ./... | grep -v '/vendor/' | grep -v '/ext/'); do go test -covermode=count -coverprofile=$(COVERAGE_DIR)/$$(basename $$j).out $$j > /dev/null 2>&1; done
+	$(Q)echo 'mode: count' > $(COVERAGE_DIR)/tmp/full.out
+	$(Q)tail -q -n +2 $(COVERAGE_DIR)/*.out >> $(COVERAGE_DIR)/tmp/full.out
+	$(Q)@go tool cover -func=$(COVERAGE_DIR)/tmp/full.out | tail -n 1 | sed -e 's/^.*statements)[[:space:]]*//' -e 's/%//'
 
-.PHONY: cross_compile
-cross_compile: ## Build the project for the primary OSes
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=$(CGO_ENABLED) $(GOBUILD) -ldflags "-X main.appVersion=$(BUILD_VERSION)" -o releases/linux/$(APP) .
-	GOOS=darwin GOARCH=amd64 CGO_ENABLED=$(CGO_ENABLED) $(GOBUILD) -ldflags "-X main.appVersion=$(BUILD_VERSION)" -o releases/darwin/$(APP) .
-	GOOS=windows GOARCH=amd64 CGO_ENABLED=$(CGO_ENABLED) $(GOBUILD) -ldflags "-X main.appVersion=$(BUILD_VERSION)" -o releases/windows/$(APP) .
-	tar czvf releases/$(APP)_darwin-64bit.tar.gz -C releases/darwin $(APP)
-	tar czvf releases/$(APP)_linux-64bit.tar.gz -C releases/linux $(APP)
-	tar czvf releases/$(APP)_windows-64bit.tar.gz -C releases/windows $(APP)
+.PHONY: package
+package: ## Create a docker image of the project
+	@echo "Packaging image: $(VERSION) [$(GIT_COMMIT)]"
+	$(Q)docker build --no-cache --build-arg VCS_REF=$(GIT_COMMIT) --build-arg VERSION=$(VERSION) \
+	--build-arg NAME=$(BIN) --build-arg BUILD_DATE=$(BUILD_DATE) \
+	-t $(IMAGE_NAME_LC):local -f $(DOCKERFILE) .
 
-.PHONY: dockerize
-dockerize: ## Create a docker image of the project
-	GOOS=linux make build
-	docker build \
-		-t $(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_LABEL) .
+.PHONY: tag
+tag: ## Tag image created by package with latest, git commit and version
+	@echo "Tagging image: ${VERSION} $(GIT_COMMIT)"
+	$(Q)docker tag $(IMAGE_NAME_LC):local $(IMAGE_NAME_LC):$(GIT_SHORT_COMMIT)
+	$(Q)docker tag $(IMAGE_NAME_LC):local $(IMAGE_NAME_LC):${VERSION}
 
-.PHONY: deploy_image
-deploy_image: ## Deploy the created docker image
-	docker login -u $(HUB_USER) -p $(HUB_PASSWORD)
-	docker push $(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_LABEL)
-
-.PHONY: fmt
-fmt: ## Run go fmt
-	$(GOFMT)
+.PHONY: push
+push: tag ## Push tagged images to docker registry
+	@echo "Pushing docker image to registry: ${VERSION} $(GIT_SHORT_COMMIT)"
+	$(Q)(echo $(BASE64_PASSWORD) | base64 --decode | docker login -u svc_product_creatio --password-stdin $(DOCKER_REGISTRY))
+	$(Q)docker push $(IMAGE_NAME_LC):$(GIT_SHORT_COMMIT)
+	$(Q)docker push $(IMAGE_NAME_LC):${VERSION}
+	$(Q)docker logout $(DOCKER_REGISTRY)
 
 .PHONY: help
 help: ## Show This Help
@@ -74,4 +153,4 @@ test: unit_test ## Run all available tests
 
 .PHONY: unit_test
 unit_test: ## Run all available unit tests
-	$(GOTEST)
+# 	go test -v $(shell go list ./... | grep -v /vendor/)
