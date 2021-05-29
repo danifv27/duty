@@ -5,7 +5,7 @@ import (
 	"net/http/httputil"
 	"os"
 
-	"github.com/gomicro/duty/config"
+	"github.com/danifv27/duty/internal/config"
 	log "github.com/gomicro/ledger"
 )
 
