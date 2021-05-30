@@ -6,6 +6,7 @@ resources:
   - deploy.yaml
   - service.yaml
   - servicemonitor.yaml
+  - ./rules/slo/recording-slo-devops-duty.yaml
 
 transformers:
   - commonLabelTransformer.yaml
