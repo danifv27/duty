@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-duty
+spec:
+  ports:
+    - protocol: TCP
+      port: 4567
+      targetPort: 4567
+      name: rest
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
+      name: metrics
+  selector:
+      app.kubernetes.io/component: mock
+      app.kubernetes.io/name: duty

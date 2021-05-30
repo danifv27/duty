@@ -29,8 +29,10 @@ routes:
     responses:
       - code: 200
         payload: "config/foo.json"
+        latency: "RanDom"
       - code: 401
         payload: "config/unauthorized.json"
+        latency: "1500ms" 
 
   - endpoint: "/v1/variable"
     type: "variable"

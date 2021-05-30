@@ -1,0 +1,75 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-duty
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: mock
+      app.kubernetes.io/name: duty
+  replicas: 1
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: false
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values:
+                      - duty
+              topologyKey: "kubernetes.io/hostname"
+            weight: 100
+      containers:
+        - name: duty
+          image: registry.hub.docker.com/library/duty:1.0.0
+          imagePullPolicy: Always
+          env:
+            - name: DUTY_CONFIG_FILE=
+              value: config/duty.yaml
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            timeoutSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /actuator/health
+              port: actuator
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 30
+            successThreshold: 1
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: "250m"
+              memory: 64Mi
+            limits:
+              cpu: "250m"
+              memory: 64Mi
+          ports:
+            - name: metrics
+              containerPort: 9000
+            - name: rest
+              containerPort: 4567
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: duty-rules-configmap
+      imagePullSecrets:
+        - name: docker-pull-secret

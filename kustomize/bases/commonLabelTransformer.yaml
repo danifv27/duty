@@ -1,0 +1,16 @@
+---
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: devops-duty
+labels:
+  app.kubernetes.io/part-of: servitium
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/component: mock
+  app.kubernetes.io/name: duty
+fieldSpecs:
+- path: metadata/labels
+  create: true
+- kind: Deployment
+  path: spec/template/metadata/labels
+  create: true
