@@ -36,7 +36,7 @@ spec:
             httpGet:
               scheme: HTTP
               path: /actuator/health
-              port: http
+              port: rest
             initialDelaySeconds: 5
             periodSeconds: 15
             timeoutSeconds: 30
@@ -46,7 +46,7 @@ spec:
             httpGet:
               scheme: HTTP
               path: /actuator/health
-              port: actuator
+              port: rest
             initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 30

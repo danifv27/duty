@@ -13,7 +13,7 @@ spec:
     matchNames:
       - ""
   endpoints:
-    - port: actuator
+    - port: metrics
       interval: 15s
       path: "/prometheus"
       scheme: http
