@@ -30,8 +30,8 @@ spec:
           image: registry.hub.docker.com/library/duty:1.0.0
           imagePullPolicy: Always
           env:
-            - name: DUTY_CONFIG_FILE=
-              value: config/duty.yaml
+            - name: DUTY_CONFIG_FILE
+              value: /config/duty.yaml
           readinessProbe:
             httpGet:
               scheme: HTTP

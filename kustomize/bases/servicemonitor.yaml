@@ -2,9 +2,9 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: rcs-monitoring-materialapi
+  name: devops-monitoring-duty
 spec:
-  jobLabel: rcs-monitoring-materialapi
+  jobLabel: devops-monitoring-duty
   selector:
     matchLabels:
       app.kubernetes.io/component: mock

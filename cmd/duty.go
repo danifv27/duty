@@ -1,49 +1,42 @@
 package main
 
 import (
-	"net/http"
+	"context"
 	"os"
-
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	"github.com/danifv27/duty/internal/duty"
 
 	log "github.com/gomicro/ledger"
 )
 
-var (
-	conf *duty.File
-	// proxies map[string]*httputil.ReverseProxy
-)
-
-func configure() {
-	c, err := duty.ParseFromFile()
-	if err != nil {
-		log.Fatalf("Failed to read config file: %v", err.Error())
-		os.Exit(1)
-	}
-
-	conf = c
-	log.Debug("Config file parsed")
-	// register with the prometheus collector
-	prometheus.MustRegister(duty.TotalRequests)
-	prometheus.MustRegister(duty.ServiceLatency)
-	log.Debug("Prometheus handler registered")
-	log.Debug("Configuration complete")
-}
-
 func main() {
-	configure()
+	var wg sync.WaitGroup
 
-	promMux := http.NewServeMux()
-	promMux.Handle("/prometheus", promhttp.Handler())
+	ctx, cancel := context.WithCancel(context.Background())
 
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	go func() {
-		log.Infof("Listening on %v:%v", "0.0.0.0", "9000")
-		http.ListenAndServe(":9000", promMux)
+		<-sig
+		cancel()
 	}()
-
-	log.Infof("Listening on %v:%v", "0.0.0.0", "4567")
-	http.ListenAndServe("0.0.0.0:4567", conf)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := duty.ServeMetrics(ctx); err != nil {
+			log.Errorf("failed to serve metrics: +%v", err)
+		}
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := duty.Serve(ctx); err != nil {
+			log.Errorf("failed to serve: +%v", err)
+		}
+	}()
+	wg.Wait()
+	log.Info("Duty finished")
 }

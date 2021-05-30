@@ -1,14 +1,15 @@
 ---
+status: /actuator/health
 routes:
   - endpoint: "/v1/foo"
     response:
       code: 200
-      payload: "config/foo.json"
+      payload: "/config/foo.json"
 
   - endpoint: "/v1/bar"
     response:
       code: 401
-      payload: "config/unauthorized.json"
+      payload: "/config/unauthorized.json"
 
   - endpoint: "/v1/baz"
     response:
@@ -22,16 +23,16 @@ routes:
     type: "static"
     response:
       code: 200
-      payload: "config/foo.json"
+      payload: "/config/foo.json"
 
   - endpoint: "/v1/ordinal"
     type: "ordinal"
     responses:
       - code: 200
-        payload: "config/foo.json"
+        payload: "/config/foo.json"
         latency: "RanDom"
       - code: 401
-        payload: "config/unauthorized.json"
+        payload: "/config/unauthorized.json"
         latency: "1500ms" 
 
   - endpoint: "/v1/variable"
@@ -39,13 +40,13 @@ routes:
     name: "var"
     responses:
       - code: 200
-        payload: "config/foo.json"
+        payload: "/config/foo.json"
         id: "200"
       - code: 401
-        payload: "config/unauthorized.json"
+        payload: "/config/unauthorized.json"
         id: "401"
       - code: 404
-        payload: "config/notfound.json"
+        payload: "/config/notfound.json"
         id: "404"
 
   - endpoint: "/v1/verb"
@@ -53,7 +54,7 @@ routes:
     responses:
       - verb: GET
         code: 200
-        payload: "config/foo.json"
+        payload: "/config/foo.json"
       - verb: POST
         code: 201
-        payload: "config/newfoo.json"
+        payload: "/config/newfoo.json"

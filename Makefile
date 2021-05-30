@@ -1,7 +1,9 @@
 ifeq ($(V),1)
   Q =
+  PROGRESS = --progress plain
 else
   Q = @
+  PROGRESS = 
 endif
 
 # The binary to build (just the basename).
@@ -127,7 +129,7 @@ coverage: ## Generates the total code coverage of the project
 package: ## Create a docker image of the project
 	@echo "Packaging image: $(VERSION) [$(GIT_COMMIT)]"
 	$(Q)docker build --no-cache --build-arg VCS_REF=$(GIT_COMMIT) --build-arg VERSION=$(VERSION) \
-	--build-arg NAME=$(BIN) --build-arg BUILD_DATE=$(BUILD_DATE) \
+	--build-arg NAME=$(BIN) --build-arg BUILD_DATE=$(BUILD_DATE) $(PROGRESS) \
 	-t $(IMAGE_NAME_LC):local -f $(DOCKERFILE) .
 
 .PHONY: tag
@@ -139,10 +141,10 @@ tag: ## Tag image created by package with latest, git commit and version
 .PHONY: push
 push: tag ## Push tagged images to docker registry
 	@echo "Pushing docker image to registry: ${VERSION} $(GIT_SHORT_COMMIT)"
-	$(Q)(echo $(BASE64_PASSWORD) | base64 --decode | docker login -u svc_product_creatio --password-stdin $(DOCKER_REGISTRY))
+#	$(Q)(echo $(BASE64_PASSWORD) | base64 --decode | docker login -u danifv27 --password-stdin $(DOCKER_REGISTRY))
 	$(Q)docker push $(IMAGE_NAME_LC):$(GIT_SHORT_COMMIT)
 	$(Q)docker push $(IMAGE_NAME_LC):${VERSION}
-	$(Q)docker logout $(DOCKER_REGISTRY)
+#	$(Q)docker logout $(DOCKER_REGISTRY)
 
 .PHONY: help
 help: ## Show This Help
