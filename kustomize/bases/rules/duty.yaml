@@ -40,6 +40,7 @@ routes:
     name: "var"
     responses:
       - code: 200
+        latency: "random"
         payload: "/config/foo.json"
         id: "200"
       - code: 401
@@ -48,6 +49,9 @@ routes:
       - code: 404
         payload: "/config/notfound.json"
         id: "404"
+      - code: 500
+        payload: "/config/internalserver.json"
+        id: "500"
 
   - endpoint: "/v1/verb"
     type: "verb"
