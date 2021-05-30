@@ -19,7 +19,7 @@ var TotalRequests = prometheus.NewCounterVec(
 
 var ServiceLatency = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
-		Name:    "http_server_requests_seconds_sum",
+		Name:    "http_server_requests_seconds",
 		Help:    "Sum of the the duration of every request.",
 		Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 7.5, 10},
 	},
