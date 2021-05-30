@@ -28,6 +28,7 @@ func configure() {
 	log.Debug("Config file parsed")
 	// register with the prometheus collector
 	prometheus.MustRegister(duty.TotalRequests)
+	prometheus.MustRegister(duty.ServiceLatency)
 	log.Debug("Prometheus handler registered")
 	log.Debug("Configuration complete")
 }
