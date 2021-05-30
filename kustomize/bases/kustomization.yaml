@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - deploy.yaml
   - service.yaml
+  - servicemonitor.yaml
 
 transformers:
   - commonLabelTransformer.yaml

@@ -1,0 +1,19 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rcs-monitoring-materialapi
+spec:
+  jobLabel: rcs-monitoring-materialapi
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: mock
+      app.kubernetes.io/name: duty
+  namespaceSelector:
+    matchNames:
+      - ""
+  endpoints:
+    - port: actuator
+      interval: 15s
+      path: "/prometheus"
+      scheme: http
