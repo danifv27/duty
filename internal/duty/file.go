@@ -54,10 +54,6 @@ func configure() {
 
 	conf = c
 	log.Debug("Config file parsed")
-	// register with the prometheus collector
-	prometheus.MustRegister(TotalRequests)
-	prometheus.MustRegister(ServiceLatency)
-	log.Debug("Prometheus handlers registered")
 	log.Info("Configuration complete")
 }
 
@@ -148,9 +144,9 @@ func (f *File) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		timer.ObserveDuration()
 	}()
 
-	defer func() {
-		TotalRequests.WithLabelValues(r.Method, status, r.URL.Path).Inc()
-	}()
+	// defer func() {
+	// 	TotalRequests.WithLabelValues(r.Method, status, r.URL.Path).Inc()
+	// }()
 
 	if r.URL.Path == f.Status {
 		code = handleStatus(w, r)

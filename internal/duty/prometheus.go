@@ -9,13 +9,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var TotalRequests = prometheus.NewCounterVec(
-	prometheus.CounterOpts{
-		Name: "http_server_requests_seconds_count",
-		Help: "Total number of requests received.",
-	},
-	[]string{"method", "status", "uri"},
-)
+// var TotalRequests = prometheus.NewCounterVec(
+// 	prometheus.CounterOpts{
+// 		Name: "http_server_requests_seconds_count",
+// 		Help: "Total number of requests received.",
+// 	},
+// 	[]string{"method", "status", "uri"},
+// )
 
 var ServiceLatency = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
@@ -29,6 +29,9 @@ var ServiceLatency = prometheus.NewHistogramVec(
 func ServeMetrics(ctx context.Context) error {
 	var err error
 
+	// register with the prometheus collector
+	// prometheus.MustRegister(TotalRequests)
+	prometheus.MustRegister(ServiceLatency)
 	promMux := http.NewServeMux()
 	promMux.Handle("/prometheus", promhttp.Handler())
 	promSrv := &http.Server{
