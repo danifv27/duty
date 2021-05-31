@@ -6,27 +6,27 @@ routes:
   - endpoint: "/v1/200"
     response:
       code: 200
-      latency: random
+      latency: "random"
       payload: "/config/foo.json"
 
   - endpoint: "/v1/401"
     response:
       code: 401
       payload: "/config/unauthorized.json"
-      latency: 2
+      latency: "2s"
 
   - endpoint: "/v1/500"
     response:
       payload: "/config/internalserver.json"
       code: 500
-      latency: 1
+      latency: "random"
 
   - endpoint: "/v1/404"
     type: "static"
     response:
       code: 404
       payload: "/config/notfound.json"
-      latency: 1500
+      latency: "1500ms"
 
   - endpoint: "/v1/ordinal"
     type: "ordinal"

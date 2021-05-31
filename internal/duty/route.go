@@ -70,6 +70,7 @@ func (r *Route) handleDefaultRoute(w http.ResponseWriter, req *http.Request) int
 
 	statusCode := http.StatusInternalServerError
 
+	// log.Debugf("Response: %v", r.Response)
 	if r.Response.Payload != "" {
 		b, err = ioutil.ReadFile(r.Response.Payload)
 		if err != nil {
@@ -78,8 +79,21 @@ func (r *Route) handleDefaultRoute(w http.ResponseWriter, req *http.Request) int
 			return statusCode
 		}
 	}
-
-	w.WriteHeader(r.Response.Code)
+	// log.Debug("Checking latency")
+	if r.Response.Latency != "" {
+		// log.Debug("Calculating latency")
+		var lat time.Duration
+		if strings.ToLower(r.Response.Latency) == "random" {
+			lat = time.Duration(rand.Intn(9)) * time.Second // lat will be between 0 and 9
+		} else if lat, err = time.ParseDuration(r.Response.Latency); err != nil {
+			log.Errorf("Malformed latency: %v", r.Response.Latency)
+			lat = time.Duration(rand.Intn(9)) * time.Second // lat will be between 0 and 9
+		}
+		// log.Debugf("Introducing latency: %v", lat)
+		time.Sleep(lat)
+	}
+	statusCode = r.Response.Code
+	w.WriteHeader(statusCode)
 	w.Write(b)
 
 	return statusCode
