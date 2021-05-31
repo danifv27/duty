@@ -1,5 +1,7 @@
 ---
 status: /actuator/health
+set: /actuator/set
+reset: /actuator/reset
 routes:
   - endpoint: "/v1/foo"
     response:
@@ -50,6 +52,7 @@ routes:
         payload: "/config/notfound.json"
         id: "404"
       - code: 500
+        latency: "random"
         payload: "/config/internalserver.json"
         id: "500"
 
