@@ -3,29 +3,30 @@ status: /actuator/health
 set: /actuator/set
 reset: /actuator/reset
 routes:
-  - endpoint: "/v1/foo"
+  - endpoint: "/v1/200"
     response:
       code: 200
+      latency: random
       payload: "/config/foo.json"
 
-  - endpoint: "/v1/bar"
+  - endpoint: "/v1/401"
     response:
       code: 401
       payload: "/config/unauthorized.json"
+      latency: 2
 
-  - endpoint: "/v1/baz"
+  - endpoint: "/v1/500"
     response:
-      code: 401
+      payload: "/config/internalserver.json"
+      code: 500
+      latency: 1
 
-  - endpoint: "/v1/biz"
-    response:
-      code: 200
-
-  - endpoint: "/v1/static"
+  - endpoint: "/v1/404"
     type: "static"
     response:
-      code: 200
-      payload: "/config/foo.json"
+      code: 404
+      payload: "/config/notfound.json"
+      latency: 1500
 
   - endpoint: "/v1/ordinal"
     type: "ordinal"

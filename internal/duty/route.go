@@ -111,12 +111,12 @@ func (r *Route) handleOrdinalRoute(w http.ResponseWriter, req *http.Request) int
 	if r.Responses[i].Latency != "" {
 		var lat time.Duration
 		if strings.ToLower(r.Responses[i].Latency) == "random" {
-			lat = time.Duration(rand.Intn(10)) * time.Second // lat will be between 0 and 10
+			lat = time.Duration(rand.Intn(9)) * time.Second // lat will be between 0 and 9
 		} else if lat, err = time.ParseDuration(r.Responses[i].Latency); err != nil {
 			log.Errorf("Malformed latency: %v", r.Responses[i].Latency)
-			lat = time.Duration(rand.Intn(10)) * time.Second // lat will be between 0 and 10
+			lat = time.Duration(rand.Intn(9)) * time.Second // lat will be between 0 and 9
 		}
-		// log.Debugf("Introducing latency: %v", lat)
+		log.Infof("Introducing latency: %v", lat)
 		time.Sleep(lat)
 	}
 	w.WriteHeader(r.Responses[i].Code)
@@ -150,6 +150,17 @@ func (r *Route) handleVariableRoute(w http.ResponseWriter, req *http.Request) in
 			return statusCode
 		}
 	}
+	if r.Responses[i].Latency != "" {
+		var lat time.Duration
+		if strings.ToLower(r.Responses[i].Latency) == "random" {
+			lat = time.Duration(rand.Intn(9)) * time.Second // lat will be between 0 and 9
+		} else if lat, err = time.ParseDuration(r.Responses[i].Latency); err != nil {
+			log.Errorf("Malformed latency: %v", r.Responses[i].Latency)
+			lat = time.Duration(rand.Intn(9)) * time.Second // lat will be between 0 and 9
+		}
+		log.Infof("Introducing latency: %v", lat)
+		time.Sleep(lat)
+	}
 	statusCode = r.Responses[i].Code
 	w.WriteHeader(statusCode)
 	w.Write(b)
@@ -172,6 +183,17 @@ func (r *Route) handleVerbRoute(w http.ResponseWriter, req *http.Request) int {
 					w.Write([]byte(fmt.Sprintf("failed to read payload: %v", err.Error())))
 					return statusCode
 				}
+			}
+			if r.Responses[i].Latency != "" {
+				var lat time.Duration
+				if strings.ToLower(r.Responses[i].Latency) == "random" {
+					lat = time.Duration(rand.Intn(9)) * time.Second // lat will be between 0 and 9
+				} else if lat, err = time.ParseDuration(r.Responses[i].Latency); err != nil {
+					log.Errorf("Malformed latency: %v", r.Responses[i].Latency)
+					lat = time.Duration(rand.Intn(9)) * time.Second // lat will be between 0 and 9
+				}
+				log.Infof("Introducing latency: %v", lat)
+				time.Sleep(lat)
 			}
 			statusCode = r.Responses[i].Code
 			w.WriteHeader(statusCode)
