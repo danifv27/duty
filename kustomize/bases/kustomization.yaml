@@ -6,7 +6,9 @@ resources:
   - deploy.yaml
   - service.yaml
   - servicemonitor.yaml
-  - ./rules/slo/recording-slo-devops-duty.yaml
+  - ./rules/slo/recording-slo-availability-duty.yaml
+  - ./rules/slo/recording-slo-latency-duty.yaml
+  - ./rules/alerts/slo-duty.yaml
 
 transformers:
   - commonLabelTransformer.yaml
@@ -18,6 +20,7 @@ configMapGenerator:
       - rules/foo.json
       - rules/notfound.json
       - rules/unauthorized.json
+      - rules/internalserver.json
 
 generatorOptions:
   disableNameSuffixHash: true
