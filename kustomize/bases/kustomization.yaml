@@ -8,7 +8,6 @@ resources:
   - servicemonitor.yaml
   - ./rules/slo/recording-slo-availability-duty.yaml
   - ./rules/slo/recording-slo-latency-duty.yaml
-  - ./rules/alerts/slo-duty.yaml
 
 transformers:
   - commonLabelTransformer.yaml
@@ -18,9 +17,9 @@ configMapGenerator:
     files:
       - rules/duty.yaml
       - rules/foo.json
+      - rules/internalserver.json
       - rules/notfound.json
       - rules/unauthorized.json
-      - rules/internalserver.json
 
 generatorOptions:
   disableNameSuffixHash: true

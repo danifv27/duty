@@ -7,17 +7,17 @@ routes:
     response:
       code: 200
       latency: "random"
-      payload: "kustomize/bases/rules/foo.json"
+      payload: "/config/foo.json"
 
   - endpoint: "/v1/401"
     response:
       code: 401
-      payload: "kustomize/bases/rules/unauthorized.json"
+      payload: "/config/unauthorized.json"
       latency: "2s"
 
   - endpoint: "/v1/500"
     response:
-      payload: "kustomize/bases/rules/internalserver.json"
+      payload: "/config/internalserver.json"
       code: 500
       latency: "random"
 
@@ -25,17 +25,17 @@ routes:
     type: "static"
     response:
       code: 404
-      payload: "kustomize/bases/rules/notfound.json"
+      payload: "/config/notfound.json"
       latency: "1500ms"
 
   - endpoint: "/v1/ordinal"
     type: "ordinal"
     responses:
       - code: 200
-        payload: "kustomize/bases/rules/foo.json"
+        payload: "/config/foo.json"
         latency: "RanDom"
       - code: 401
-        payload: "kustomize/bases/rules/unauthorized.json"
+        payload: "/config/unauthorized.json"
         latency: "1500ms" 
 
   - endpoint: "/v1/variable"
@@ -44,17 +44,17 @@ routes:
     responses:
       - code: 200
         latency: "random"
-        payload: "kustomize/bases/rules/foo.json"
+        payload: "/config/foo.json"
         id: "200"
       - code: 401
-        payload: "kustomize/bases/rules/unauthorized.json"
+        payload: "/config/unauthorized.json"
         id: "401"
       - code: 404
-        payload: "kustomize/bases/rules/notfound.json"
+        payload: "/config/notfound.json"
         id: "404"
       - code: 500
         latency: "random"
-        payload: "kustomize/bases/rules/internalserver.json"
+        payload: "/config/internalserver.json"
         id: "500"
 
   - endpoint: "/v1/verb"
@@ -62,16 +62,16 @@ routes:
     responses:
       - verb: GET
         code: 200
-        payload: "kustomize/bases/rules/foo.json"
+        payload: "/config/foo.json"
       - verb: POST
         code: 201
-        payload: "kustomize/bases/rules/newfoo.json"
+        payload: "/config/newfoo.json"
   
   - endpoint: "/v1/rate"
     type: "rate"
     responses:
       - code: 200
-        payload: "kustomize/bases/rules/foo.json"
-      - rate: 0.675
+        payload: "/config/foo.json"
+      - rate: 0.700
         code: 500
-        payload: "kustomize/bases/rules/internalserver.json"
+        payload: "/config/internalserver.json"
