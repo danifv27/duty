@@ -1,0 +1,129 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: recording-slo-availability-duty-rules
+spec: 
+  groups:
+    - name: slo-sli-recordings-duty-requests-availability
+      rules:
+        - record: slo:sli_error:ratio_increase5m
+          # Number of requests that violated the error SLO (all requests that returns 5xx or 429 status code)
+          # /
+          # Number of requests served in the SLO window
+          expr: |
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*", status=~"(5..|429)"}[5m]))
+            /
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*"}[5m]))
+          labels:
+            id: duty-requests-availability
+            service: duty
+            slo: requests-availability
+            window: 5m
+        - record: slo:sli_error:ratio_increase30m
+          # Number of requests that violated the error SLO (all requests that returns 5xx or 429 status code)
+          # /
+          # Number of requests served in the SLO window
+          expr: |
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*", status=~"(5..|429)"}[30m]))
+            /
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*"}[30m]))
+          labels:
+            id: duty-requests-availability
+            service: duty
+            slo: requests-availability
+            window: 30m
+        - record: slo:sli_error:ratio_increase1h
+          # Number of requests that violated the error SLO (all requests that returns 5xx or 429 status code)
+          # /
+          # Number of requests served in the SLO window
+          expr: |
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*", status=~"(5..|429)"}[1h]))
+            /
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*"}[1h]))
+          labels:
+            id: duty-requests-availability
+            service: duty
+            slo: requests-availability
+            window: 1h
+        - record: slo:sli_error:ratio_increase1d
+          # Number of requests that violated the error SLO (all requests that returns 5xx or 429 status code)
+          # /
+          # Number of requests served in the SLO window
+          expr: |
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*", status=~"(5..|429)"}[1d]))
+            /
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*"}[1d]))
+          labels:
+            id: duty-requests-availability
+            service: duty
+            slo: requests-availability
+            window: 1d
+        - record: slo:sli_error:ratio_increase3d
+          # Number of requests that violated the error SLO (all requests that returns 5xx or 429 status code)
+          # /
+          # Number of requests served in the SLO window
+          expr: |
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*", status=~"(5..|429)"}[3d]))
+            /
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*"}[3d]))
+          labels:
+            id: duty-requests-availability
+            service: duty
+            slo: requests-availability
+            window: 3d
+        - record: slo:sli_error:ratio_increase30d
+          expr: |
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*", status=~"(5..|429)"}[30d]))
+            /
+            sum(increase(http_server_requests_seconds_count{job="duty", uri!~".*actuator.*"}[30d]))
+          labels:
+            id: duty-requests-availability
+            service: duty
+            slo: requests-availability
+            window: 30d
+    - name: slo-meta-recordings-duty-requests-availability
+      rules:
+      - record: slo:objective:ratio
+        expr: vector(0.95)
+        labels:
+          id: duty-requests-availability
+          service: duty
+          slo: requests-availability
+      - record: slo:error_budget:ratio
+        expr: vector(1-0.95)
+        labels:
+          id: duty-requests-availability
+          service: duty
+          slo: requests-availability
+      - record: slo:time_period:days
+        expr: vector(30)
+        labels:
+          id: duty-requests-availability
+          service: duty
+          slo: requests-availability
+      - record: slo:current_burn_rate:ratio
+        expr: |
+          slo:sli_error:ratio_increase5m{id="duty-requests-availability", service="duty", slo="requests-availability"}
+          / on(id, slo, service) group_left
+          slo:error_budget:ratio{id="duty-requests-availability", service="duty", slo="requests-availability"}
+        labels:
+          id: duty-requests-availability
+          service: duty
+          slo: requests-availability
+      - record: slo:period_burn_rate:ratio
+        expr: |
+          slo:sli_error:ratio_increase30d{id="duty-requests-availability", service="duty", slo="requests-availability"}
+          / on(id, slo, service) group_left
+          slo:error_budget:ratio{id="duty-requests-availability", service="duty", slo="requests-availability"}
+        labels:
+          id: duty-requests-availability
+          service: duty
+          slo: requests-availability
+      - record: slo:period_error_budget_remaining:ratio
+        expr: 1 - slo:period_burn_rate:ratio{id="duty-requests-availability",
+          service="duty", slo="requests-availability"}
+        labels:
+          id: duty-requests-availability
+          service: duty
+          slo: requests-availability

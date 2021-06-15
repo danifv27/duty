@@ -1,0 +1,54 @@
+---
+groups:
+  - name: slo-alerts-duty-requests-availability
+    rules:
+    - alert: DutyAvailability
+      annotations:
+        description: "{{$labels.service}} {{$labels.slo}} SLO error budget burn rate is over expected."
+        summary: "{{$labels.service}} {{$labels.slo}} SLO error"
+      expr: |
+        (
+          slo:sli_error:ratio_increase1h{cluster_id="%{ENV_CLUSTER_ID}", namespace="%{ENV_NAMESPACE}", id="duty-requests-availability", service="duty", slo="requests-availability"} > (13.44 * 0.05)
+        )
+        or
+        (
+          slo:sli_error:ratio_rate6h{cluster_id="%{ENV_CLUSTER_ID}", namespace="%{ENV_NAMESPACE}", id="duty-requests-availability", service="duty", slo="requests-availability"} > (5.60 * 0.05)
+        )
+      labels:
+        alerting: opsgenie
+        severity: critical
+    - alert: DutyHighRateAvailability
+      annotations:
+        description: "{{$labels.service}} {{$labels.slo}} SLO error budget burn rate is over expected."
+        summary: "{{$labels.service}} {{$labels.slo}} SLO error"
+      expr: |
+        slo:sli_error:ratio_increase3d{cluster_id="%{ENV_CLUSTER_ID}", namespace="%{ENV_NAMESPACE}", id="duty-requests-availability", service="duty", slo="requests-availability"} > (1.40 * 0.05)
+      labels:
+        alerting: opsgenie
+        severity: warning
+  - name: slo-alerts-duty-requests-latency
+    rules:
+    - alert: DutyLatency
+      annotations:
+        description: "{{$labels.service}} {{$labels.slo}} SLO error budget burn rate is over expected."
+        summary: "{{$labels.service}} {{$labels.slo}} SLO error"
+      expr: |
+        (
+          slo:sli_error:ratio_rate1h{cluster_id="%{ENV_CLUSTER_ID}", namespace="%{ENV_NAMESPACE}", id="duty-requests-latency", service="duty", slo="requests-latency"} > (13.44 * 0.05)
+        )
+        or
+        (
+          slo:sli_error:ratio_rate6h{cluster_id="%{ENV_CLUSTER_ID}", namespace="%{ENV_NAMESPACE}", id="duty-requests-latency", service="duty", slo="requests-latency"} > (5.60 * 0.05)
+        )
+      labels:
+        alerting: opsgenie
+        severity: critical
+    - alert: DutyHighRateLatency
+      annotations:
+        description: "{{$labels.service}} {{$labels.slo}} SLO error budget burn rate is over expected."
+        summary: "{{$labels.service}} {{$labels.slo}} SLO error"
+      expr: |
+        slo:sli_error:ratio_increase3d{cluster_id="%{ENV_CLUSTER_ID}", namespace="%{ENV_NAMESPACE}", id="duty-requests-latency", service="duty", slo="requests-latency"} > (1.40 * 0.05)
+      labels:
+        alerting: opsgenie
+        severity: warning
