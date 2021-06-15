@@ -14,6 +14,7 @@ const (
 	staticRouteType   = "static"
 	variableRouteType = "variable"
 	verbRouteType     = "verb"
+	rateRouteType     = "rate"
 )
 
 // Route represents a given endpoint and the kind of response it should return
@@ -41,6 +42,9 @@ func (r *Route) ServeHTTP(w http.ResponseWriter, req *http.Request) int {
 
 	case verbRouteType:
 		return r.handleVerbRoute(w, req)
+
+	case rateRouteType:
+		return r.handleRateRoute(w, req)
 
 	default:
 		return r.handleDefaultRoute(w, req)
@@ -219,6 +223,62 @@ func (r *Route) handleVerbRoute(w http.ResponseWriter, req *http.Request) int {
 	statusCode = http.StatusMethodNotAllowed
 	w.WriteHeader(statusCode)
 	w.Write([]byte("method not defined in config"))
+
+	return statusCode
+}
+
+func (r *Route) handleRateRoute(w http.ResponseWriter, req *http.Request) int {
+
+	idx := -1
+	statusCode := http.StatusInternalServerError
+	// log.Debugf("Length: %v", len(r.Responses))
+	for i := range r.Responses {
+		if r.Responses[i].Rate > 0 {
+			if rand.Float32() < r.Responses[i].Rate {
+				idx = i
+			} else {
+				if (i + 1) < len(r.Responses) {
+					idx = i + 1
+				} else {
+					idx = 0
+				}
+			}
+			break
+		}
+	}
+	// log.Debugf("idx: %v", idx)
+	if idx > -1 {
+		var b []byte
+		var err error
+
+		if r.Responses[idx].Payload != "" {
+			b, err = ioutil.ReadFile(r.Responses[idx].Payload)
+			if err != nil {
+				w.WriteHeader(statusCode)
+				w.Write([]byte(fmt.Sprintf("failed to read payload: %v", err.Error())))
+				return statusCode
+			}
+		}
+		if r.Responses[idx].Latency != "" {
+			var lat time.Duration
+			if strings.ToLower(r.Responses[idx].Latency) == "random" {
+				lat = time.Duration(rand.Intn(9)) * time.Second // lat will be between 0 and 9
+			} else if lat, err = time.ParseDuration(r.Responses[idx].Latency); err != nil {
+				log.Errorf("Malformed latency: %v", r.Responses[idx].Latency)
+				lat = time.Duration(rand.Intn(9)) * time.Second // lat will be between 0 and 9
+			}
+			log.Infof("Introducing latency: %v", lat)
+			time.Sleep(lat)
+		}
+		statusCode = r.Responses[idx].Code
+		w.WriteHeader(statusCode)
+		w.Write(b)
+		return statusCode
+	} //if (idx > 1)
+
+	statusCode = http.StatusNotAcceptable
+	w.WriteHeader(statusCode)
+	w.Write([]byte("rate not defined"))
 
 	return statusCode
 }

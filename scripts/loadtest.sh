@@ -1,15 +1,15 @@
 #!/usr/local/bin/bash
 
 # (id, url, duration, rate)
-declare -a TARGET1=("GET http://localhost:4567/actuator/set?name=var&id=200" "1" "1s")
-declare -a TARGET2=("GET http://localhost:4567/v1/variable" "2" "10s")
-declare -a TARGET3=("GET http://localhost:4567/actuator/set?name=var&id=500" "1" "1s")
-declare -a TARGET4=("GET http://localhost:4567/v1/variable" "2" "5s") 
-declare -a TARGET5=("GET http://localhost:4567/actuator/set?name=var&id=400" "1" "1s") 
-declare -a TARGET6=("GET http://localhost:4567/v1/variable" "3" "2s") 
+# declare -a TARGET1=("GET http://localhost:4567/actuator/set?name=var&id=200" "1" "1s")
+declare -a TARGET2=("GET http://localhost:4567/v1/200" "2" "10s")
+# declare -a TARGET3=("GET http://localhost:4567/actuator/set?name=var&id=500" "1" "1s")
+declare -a TARGET4=("GET http://localhost:4567/v1/500" "2" "5s") 
+# declare -a TARGET5=("GET http://localhost:4567/actuator/set?name=var&id=400" "1" "1s") 
+declare -a TARGET6=("GET http://localhost:4567/v1/401" "3" "2s") 
 
-declare -a TARGETS=("TARGET1" "TARGET2" "TARGET3" "TARGET4" "TARGET5" "TARGET6")
-
+# declare -a TARGETS=("TARGET1" "TARGET2" "TARGET3" "TARGET4" "TARGET5" "TARGET6")
+declare -a TARGETS=("TARGET2" "TARGET4" "TARGET6")
 #### OPTIONS REPORT 📝
 TYPE="hist[0,100ms,200ms,300ms]"
 
