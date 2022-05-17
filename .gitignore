@@ -2,3 +2,4 @@
 output
 loadtest
 *.bin
+.DS_Store
